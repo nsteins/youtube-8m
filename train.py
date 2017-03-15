@@ -176,6 +176,7 @@ def get_input_data_tensors(reader,
 def find_class_by_name(name, modules):
   """Searches the provided modules for the named class and returns it."""
   modules = [getattr(module, name, None) for module in modules]
+  print modules
   return next(a for a in modules if a)
 
 

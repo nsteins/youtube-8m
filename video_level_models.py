@@ -27,6 +27,10 @@ flags.DEFINE_integer(
     "moe_num_mixtures", 2,
     "The number of mixtures (excluding the dummy 'expert') used for MoeModel.")
 
+flags.DEFINE_integer(
+    "hidden_layer", 8092,
+    "The number of mixtures (excluding the dummy 'expert') used for MoeModel.")
+
 class LogisticModel(models.BaseModel):
   """Logistic model with L2 regularization."""
 
@@ -41,10 +45,38 @@ class LogisticModel(models.BaseModel):
       A dictionary with a tensor containing the probability predictions of the
       model in the 'predictions' key. The dimensions of the tensor are
       batch_size x num_classes."""
+      
     output = slim.fully_connected(
         model_input, vocab_size, activation_fn=tf.nn.sigmoid,
         weights_regularizer=slim.l2_regularizer(l2_penalty))
     return {"predictions": output}
+
+
+class NNModel(models.BaseModel):
+  """Logistic model with L2 regularization."""
+
+  def create_model(self, model_input, vocab_size, hidden_layer=None, l2_penalty=1e-8, **unused_params):
+    """Creates a logistic model.
+
+    Args:
+      model_input: 'batch' x 'num_features' matrix of input features.
+      vocab_size: The number of classes in the dataset.
+
+    Returns:
+      A dictionary with a tensor containing the probability predictions of the
+      model in the 'predictions' key. The dimensions of the tensor are
+      batch_size x num_classes."""
+      
+    hidden_layer = hidden_layer or FLAGS.hidden_layer
+      
+    hidden = slim.fully_connected(
+        model_input,hidden_layer,activation_fn=tf.nn.relu6,
+        weights_regularizer=slim.l2_regularizer(l2_penalty))
+    output = slim.fully_connected(
+        hidden, vocab_size, activation_fn=tf.nn.sigmoid,
+        weights_regularizer=slim.l2_regularizer(l2_penalty))
+    return {"predictions": output}
+
 
 class MoeModel(models.BaseModel):
   """A softmax over a mixture of logistic models (with L2 regularization)."""
